@@ -12,7 +12,8 @@ Steps:
 
 2. Run Stata script called orcid.do. This script will produce the dataset as reported in the document. Note that the other .do files (starting with "supp") are supporting files and there is no need to run them.
 
-If you use or modify this code in your research, kindly cite me.
+If you use or modify this code in your research, kindly cite me. Suggested citation:
+Orazbayev, Sultan (2017) Replication code for: International stocks and flows of students and researchers reconstructed from ORCID biographies, doi: 10.6084/m9.figshare.4822798.
 
 References:
 
