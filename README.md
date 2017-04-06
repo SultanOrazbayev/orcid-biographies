@@ -1,6 +1,6 @@
-# Replication code for: Reconstructing international stocks and flows of researchers and students from ORCID biographies
+# Replication code for: International stocks and flows of students and researchers reconstructed from ORCID biographies
 
-This repository contains code which is needed to reproduce the data contained in the document "Reconstructing international stocks and flows of researchers and students from ORCID biographies". 
+This repository contains code which is needed to reproduce the data contained in the document "International stocks and flows of students and researchers reconstructed from ORCID biographies". 
 
 To run the code you will need the following tools: bash, jq, Stata.
 
