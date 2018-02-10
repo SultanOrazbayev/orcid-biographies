@@ -1,18 +1,17 @@
+***
+* The big picture:
+* 1. Import the data, do some cleaning, reshape the data
+* 2. Infer individual's most likely country of origin and use it to calculate bilateral stocks
+* 3. Calculate bilateral migration/mobility flows
+***
+* switch for data adjustments
 local runall 1
-*local rowlimit rowrange(1:1000)
 
-* include path names
-include "/Volumes/work/projects/ORCIDnew/scripts/localpaths-stata.txt"
-
-* copy the files into the data folder
-shell cp "`pathscripts'/sci-data/supp-fix-orcids.do" "`pathdataproc'/supp-fix-orcids.do"
-shell cp "`pathscripts'/sci-data/supp-standardise.do" "`pathdataproc'/supp-standardise.do" 
-shell cp "`pathdatamanual'/countrycodes-orcid.dta" "`pathdataproc'/countrycodes-orcid.dta"
-
-cd "`pathdataproc'"
+* for quicker testing
+local rowlimit rowrange(1:1000)
 
 * start a log for review
-log using orciddata/log-orciddo.smcl, replace
+capture noisily log using orciddata/log-orciddo.smcl, replace
 
 * define sample period
 	local yearmin 1990
@@ -20,6 +19,14 @@ log using orciddata/log-orciddo.smcl, replace
 
 * import the data
 	import delimited using orciddata/orcid-raw.csv, clear encoding("UTF-8") `rowlimit'
+
+* attach country labels
+	
+* this is only to conserve space
+encode type, gen(occupationtype)
+drop type
+	
+exit	
 	rename v1 orcid_string
 	rename v2 yearstart
 		label variable yearstart "Year of starting the position"

@@ -12,6 +12,6 @@ outfile="orciddata/orcid-raw.csv"
 mkdir -p orciddata
 
 # the first command untars just the json files and pipes them (to avoid extracting millions of individual files) to jq, which extracts just the information of interest and stores it in csv format
-echo "orcid,country,yearstart,yearend,type,roletitle" > "$outfile" 
-tar -xf "$rawfile" -O | jq -rc '."orcid-identifier".path as $id|."activities-summary".educations|."education-summary"| if .==null then empty else .[] end| [$id,(.organization.address.country),."start-date"."year".value,."end-date".year.value,"EDUCATION",(."role-title"|if .==null then "NA:::n-u-l-l" else (.|gsub("\r";"")|gsub("\n";"")|.[0:50]) end)]|@csv' >> "$outfile"
-tar -xf "$rawfile" -O | jq -rc '."orcid-identifier".path as $id|."activities-summary".employments|."employment-summary"| if .==null then empty else .[] end| [$id,(.organization.address.country),."start-date"."year".value,."end-date".year.value,"EMPLOYMENT",(."role-title"|if .==null then "NA:::n-u-l-l" else (.|gsub("\r";"")|gsub("\n";"")|.[0:50]) end)]|@csv' >> "$outfile"
+echo "orcid,countryiso2,yearstart,yearend,type,roletitle" > "$outfile" 
+tar -xf "$rawfile" -O | jq -rc '."orcid-identifier".path as $id|."activities-summary".educations|."education-summary"| if .==null then empty else .[] end| [$id,(.organization.address.country),."start-date"."year".value,."end-date".year.value,"EDUCATION",(."role-title"|if .==null then "NA:::n-u-l-l" else (.|gsub("\r";"")|gsub("\n";"")|.[0:100]) end)]|@csv' >> "$outfile"
+tar -xf "$rawfile" -O | jq -rc '."orcid-identifier".path as $id|."activities-summary".employments|."employment-summary"| if .==null then empty else .[] end| [$id,(.organization.address.country),."start-date"."year".value,."end-date".year.value,"EMPLOYMENT",(."role-title"|if .==null then "NA:::n-u-l-l" else (.|gsub("\r";"")|gsub("\n";"")|.[0:100]) end)]|@csv' >> "$outfile"
