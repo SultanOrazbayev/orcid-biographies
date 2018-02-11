@@ -4,11 +4,12 @@
 * 2. Infer individual's most likely country of origin and use it to calculate bilateral stocks
 * 3. Calculate bilateral migration/mobility flows
 ***
+
 * switch for data adjustments
 local runall 1
 
-* for quicker testing
-local rowlimit rowrange(1:1000)
+* uncomment for quicker testing
+*local rowlimit rowrange(1:1000)
 
 * start a log for review
 capture noisily log using orciddata/log-orciddo.smcl, replace
@@ -17,62 +18,30 @@ capture noisily log using orciddata/log-orciddo.smcl, replace
 	local yearmin 1990
 	local yearmax 2015
 
-* import the data
+* see description at the end *
+if 1|`runall'{ 
+
+	* import the data
 	import delimited using orciddata/orcid-raw.csv, clear encoding("UTF-8") `rowlimit'
-
-* attach country labels
 	
-* this is only to conserve space
-encode type, gen(occupationtype)
-drop type
-	
-exit	
-	rename v1 orcid_string
-	rename v2 yearstart
-		label variable yearstart "Year of starting the position"
-	rename v3 yearend
-		label variable yearend "Year of ending the position"
-	rename v4 occupationtype
-	rename v5 position
-		* the position string is trimmed and truncated to the first 100 characters conserve space
-		replace position = ustrtrim(usubstr(ustrtrim(position),1,100))
-	format position %10s
-	rename v6 country
+	* this is only to conserve space
+	encode type, gen(occupationtype)
+	drop type
 
-* clean up by trimming and converting all to lowercase
-	foreach v of varlist position occupationtype country{
+	* fix orcids (spam/test accounts/etc)
+	gen orcid_valid = 1
+	include supp-fix-orcids.do
+	drop if orcid_valid==.
+	drop orcid_valid
+
+	* clean up the job/education titles by trimming and converting all to lowercase
+	foreach v of varlist roletitle{
 		replace `v' = ustrlower(ustrtrim(`v'))
 	}
 	
-* fix orcids (spam/test accounts/etc)
-	gen orcid = 1
-	include supp-fix-orcids.do
-	drop if orcid==.
-	drop orcid
-
-* convert the countries and encode (mainly to conserve space)
-	rename country countryiso2_string
-	merge n:1 countryiso2_string using countrycodes-orcid.dta , keepusing(country*code) keep(1 2 3) gen(mcountry)
-		drop if mcountry!=3
-	drop countryiso2_string mcountry countrycode
-	
-	
-* there are a few observations with missing info on occupation type
-	* based on their values seems more of employment type than education
-	replace occupationtype = "employment" if occupationtype==""
-
-* encode to conserve space
-	encode occupationtype, gen(otype)
-		label variable otype "Occupation type"
-	drop occupationtype
-	compress
-
-* standardise positions
+	* standardise positions
 	include supp-standardise.do
-		
-	replace otype = "employment":otype if emp_type!=.
-	replace otype = "education":otype if edu_type!=.
-	
+		exit
 	* deal with 'missing' times
 	if 1{ 
 
@@ -109,7 +78,53 @@ exit
 		count if yearstart>yearend
 
 	}
-	* folding for : deal with 'missing' times (assumptions) *
+	* folding for : deal with 'missing' dates (assumptions) *
+
+	
+}
+* folding for : step 1 *	
+	
+
+	* save this for later (once the data has been aggregated to iso2 level, since this will be quicker)
+	
+* attach country labels and encode them to conserve space
+	
+* attach country labels
+	
+	
+exit	
+	rename v1 orcid_string
+	rename v2 yearstart
+		label variable yearstart "Year of starting the position"
+	rename v3 yearend
+		label variable yearend "Year of ending the position"
+	rename v4 occupationtype
+	rename v5 position
+		* the position string is trimmed and truncated to the first 100 characters conserve space
+		replace position = ustrtrim(usubstr(ustrtrim(position),1,100))
+
+	rename v6 country
+
+	
+
+* convert the countries and encode (mainly to conserve space)
+	rename country countryiso2_string
+	merge n:1 countryiso2_string using countrycodes-orcid.dta , keepusing(country*code) keep(1 2 3) gen(mcountry)
+		drop if mcountry!=3
+	drop countryiso2_string mcountry countrycode
+	
+	
+* there are a few observations with missing info on occupation type
+	* based on their values seems more of employment type than education
+	replace occupationtype = "employment" if occupationtype==""
+
+* encode to conserve space
+	encode occupationtype, gen(otype)
+		label variable otype "Occupation type"
+	drop occupationtype
+	compress
+
+	
 
 ** reshaping of the data
 ** do a manual reshaping of the data into a long form (easier to calculate stocks/flows)	
