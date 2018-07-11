@@ -29,6 +29,7 @@ if 1|`runall'{
 	drop type
 
 	* fix orcids (spam/test accounts/etc)
+	rename orcid orcid_string
 	gen orcid_valid = 1
 	include supp-fix-orcids.do
 	drop if orcid_valid==.
@@ -41,7 +42,7 @@ if 1|`runall'{
 	
 	* standardise positions
 	include supp-standardise.do
-		exit
+		
 	* deal with 'missing' times
 	if 1{ 
 
@@ -56,20 +57,20 @@ if 1|`runall'{
 
 		
 		* if year is missing for education, then subtract 3 years from end date for undergraduate and PhD and 1 for masters or unknown
-		replace yearstart = yearend-1 if yearstart==. &  yearend!=. & otype=="education":otype & ( edu_type=="master":edu_type |  edu_type==. )
-		replace yearend = yearstart + 1 if yearend ==. & yearstart!=. & otype=="education":otype & ( edu_type=="master":edu_type |  edu_type==. )
+		replace yearstart = yearend-1 if yearstart==. &  yearend!=. & occupationtype=="EDUCATION":occupationtype & ( edu_type=="master":edu_type |  edu_type==. )
+		replace yearend = yearstart + 1 if yearend ==. & yearstart!=. & occupationtype=="EDUCATION":occupationtype & ( edu_type=="master":edu_type |  edu_type==. )
 		
-		replace yearstart = yearend-4 if yearstart==. &  yearend!=. & otype=="education":otype & ( edu_type!="master":edu_type & edu_type!=. )
-		replace yearend = yearstart + 4 if yearend ==. & yearstart!=. & otype=="education":otype & ( edu_type!="master":edu_type & edu_type!=. )
-		replace yearend = `yearmax' if yearend >`yearmax' & yearend!=. & otype=="education":otype
+		replace yearstart = yearend-4 if yearstart==. &  yearend!=. & occupationtype=="EDUCATION": occupationtype & ( edu_type!="master":edu_type & edu_type!=. )
+		replace yearend = yearstart + 4 if yearend ==. & yearstart!=. & occupationtype=="EDUCATION": occupationtype & ( edu_type!="master":edu_type & edu_type!=. )
+		replace yearend = `yearmax' if yearend >`yearmax' & yearend!=. & occupationtype=="EDUCATION": occupationtype
 		
  		* if no starting date, then assume started the year before employment, if end year is beyond the sample period, then assign the maximum sample year
-		replace yearstart = yearend - 1 if yearstart ==. & yearend!=. & otype=="employment":otype
-		replace yearend = `yearmax' if yearend >`yearmax' & yearend!=. & otype=="employment":otype
+		replace yearstart = yearend - 1 if yearstart ==. & yearend!=. & occupationtype=="EMPLOYMENT": occupationtype
+		replace yearend = `yearmax' if yearend >`yearmax' & yearend!=. & occupationtype=="EMPLOYMENT": occupationtype
 		
 		* if no end date, then assume this continues for either 5 years or until now (whichever is lowest)
-		* you can change this line to allow ongoing employment (as it would show up on the ORCID web interface) by changding the line below to: replace yearend = `yearmax' if yearend ==. & yearstart!=. & otype=="employment":otype
-		replace yearend = yearstart + 5 if yearend ==. & yearstart!=. & otype=="employment":otype
+		* you can change this line to allow ongoing employment (as it would show up on the ORCID web interface) by changding the line below to: replace yearend = `yearmax' if yearend ==. & yearstart!=. & occupationtype=="EMPLOYMENT": occupationtype
+		replace yearend = yearstart + 5 if yearend ==. & yearstart!=. & occupationtype=="EMPLOYMENT": occupationtype
 		
 		* check that years make sense
 		count if yearstart>yearend
@@ -91,8 +92,7 @@ if 1|`runall'{
 	
 * attach country labels
 	
-	
-exit	
+/*
 	rename v1 orcid_string
 	rename v2 yearstart
 		label variable yearstart "Year of starting the position"
@@ -104,26 +104,28 @@ exit
 		replace position = ustrtrim(usubstr(ustrtrim(position),1,100))
 
 	rename v6 country
-
+*/
 	
 
 * convert the countries and encode (mainly to conserve space)
 	rename country countryiso2_string
+	replace countryiso2_string=ustrlower(countryiso2_string)
 	merge n:1 countryiso2_string using countrycodes-orcid.dta , keepusing(country*code) keep(1 2 3) gen(mcountry)
 		drop if mcountry!=3
 	drop countryiso2_string mcountry countrycode
 	
-	
+/*	Check, I think this was fixed
 * there are a few observations with missing info on occupation type
 	* based on their values seems more of employment type than education
 	replace occupationtype = "employment" if occupationtype==""
+
 
 * encode to conserve space
 	encode occupationtype, gen(otype)
 		label variable otype "Occupation type"
 	drop occupationtype
 	compress
-
+*/
 	
 
 ** reshaping of the data
@@ -136,13 +138,13 @@ exit
 	* expand by the number of yearsin position
 	expand yearsinposition
 
-	bysort orcid position tempidgroup (yearstart yearend) : gen year = yearstart+_n-1
+	bysort orcid roletitle tempidgroup (yearstart yearend) : gen year = yearstart+_n-1
 
 	* now can get rid of the yearstart/end
 	drop yearstart yearend
 
 	* won't need these either
-	drop position tempidgroup
+	drop roletitle tempidgroup
 
 	* if you had different positions in the same country-year, then there will be duplicates
 	drop yearsinposition
@@ -164,8 +166,8 @@ exit
 		rename countryiso2code currentlocation
 		
 		gen stock_all = 1
-		gen stock_students = (otype=="education":otype)
-		gen stock_workers = (otype=="employment":otype)
+		gen stock_students = (occupationtype=="EDUCATION": occupationtype)
+		gen stock_workers = (occupationtype=="EMPLOYMENT": occupationtype)
 		
 		* keep just the period of interest
 		keep if year>=`yearmin' & year<=`yearmax'
@@ -190,7 +192,7 @@ exit
 		* identify the country in which the user was last year
 		* note that due to individuals with multiple countries I will need to form all bilateral combinations of origin destination
 		rename countryiso2code destination
-		rename otype otype_destination
+		rename occupationtype otype_destination
 		
 		replace year = year + 1
 		drop if year>`yearmax'+1
@@ -198,14 +200,15 @@ exit
 		joinby orcid year using orciddata/data-processed.dta
 
 		rename countryiso2code origin
-		rename otype otype_origin
+		rename occupationtype otype_origin
 		drop otype_origin
 		
 		duplicates drop
 		
 		gen flow_all = 1
-		gen flow_students = (otype=="education":otype)
-		gen flow_workers = (otype=="employment":otype)
+		* note: here could put an additional restriction based on the occupation at the origin... e.g. otype_destination=="EDUCATION": occupationtype 
+		gen flow_students = (otype_destination=="EDUCATION": occupationtype)
+		gen flow_workers = (otype_destination=="EMPLOYMENT": occupationtype)
 		
 		keep if year>=`yearmin' & year<=`yearmax'
 
@@ -247,10 +250,10 @@ exit
 		* also generate the list of excluded orcids
 		import delimited using orciddata/orcid-raw.csv, clear encoding("UTF-8") `rowlimit' colrange(1:1)
 		rename v1 orcid_string		
-		gen orcid = 1
+		gen orcid_valid = 1
 		include supp-fix-orcids.do
-		keep if orcid==.
-		drop orcid
+		keep if orcid_valid==.
+		drop orcid_valid
 		duplicates drop
 		sort orcid
 		export delimited using orciddata/excluded.txt, replace novarna
