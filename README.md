@@ -8,11 +8,11 @@ Steps:
 
 0. Before running the files you must download the 2017 ORCID Public Data File (public_profiles_API2.0_2017_10_json.tar.gz) from https://figshare.com/articles/ORCID_Public_Data_File_2017/5479792. Note that the file is very large (4 GB+) and since each record is stored in individual files, extracting it will give millions of individual files! To avoid processing individual files, note the directory where you stored the downloaded file and proceed to step 1.
 
-1. Make sure your terminal is changed into the relevant directory from step 0 (e.g. cd ~/desktop if your file is stored on the desktop). Run bash script called makecsv.bash. This script will combine all the individual records with at least one education or employment record into one big CSV file.
+1. Make sure your terminal is changed into the relevant directory from step 0 (e.g. if your file is stored on the desktop, then type "cd ~/desktop" in the terminal). Run bash script called makecsv.bash by typing "/bin/bash makecsv.bash". This script will combine all the individual ORCID records with at least one education or employment record into one big CSV file and save it as "orciddata/orcid-raw.csv". Depending on your machine, this step will take about 2 hours.
 
 2. Run Stata script called orcid.do. This script will produce the dataset as reported in the document. Note that the other .do files (starting with "supp") are supporting files and there is no need to run them.
 
-If you use or modify this code in your research, kindly cite me. Suggested citation:
+If you use or modify this code in your research, kindly cite:
 
 Orazbayev, Sultan (2017) Replication code for: International stocks and flows of students and researchers reconstructed from ORCID biographies, doi: 10.6084/m9.figshare.4822798.
 
