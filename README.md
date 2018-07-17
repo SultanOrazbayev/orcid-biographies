@@ -14,7 +14,7 @@ Steps:
 
 If you use or modify this code in your research, kindly cite:
 
-Orazbayev, Sultan (2017) Replication code for: International stocks and flows of students and researchers reconstructed from ORCID biographies, doi: 10.6084/m9.figshare.4822798.
+Orazbayev, Sultan (2017) International stocks and flows of students and researchers reconstructed from ORCID biographies, MPRA Paper No. 79242, https://mpra.ub.uni-muenchen.de/id/eprint/79242.
 
 References:
 
